@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DropFall — Roadmap</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #1a1a2e;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, #16213e 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 50%, #16213e 0%, transparent 50%),
+    linear-gradient(180deg, #1a1a2e 0%, #0f0f23 100%);
+  min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  padding: 20px;
+  color: #c8c8c8;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255,255,255,0.015) 2px,
+      rgba(255,255,255,0.015) 4px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 30px 20px;
+  background: linear-gradient(180deg, rgba(50,50,80,0.6) 0%, rgba(30,30,50,0.4) 100%);
+  border: 2px solid #3a3a5c;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 0 40px rgba(100,100,180,0.05);
+}
+
+.header h1 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: #6bff6b;
+  text-shadow: 0 0 10px rgba(107,255,107,0.3), 0 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: 2px;
+}
+
+.header .subtitle {
+  color: #8a8aaa;
+  font-size: 13px;
+  margin-top: 8px;
+  letter-spacing: 1px;
+}
+
+.header .counters {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 15px;
+  font-size: 13px;
+}
+
+.header .counters span {
+  background: rgba(0,0,0,0.3);
+  padding: 4px 14px;
+  border-radius: 4px;
+  border: 1px solid #3a3a5c;
+}
+
+.header .counters .done { color: #6bff6b; }
+.header .counters .total { color: #ffaa00; }
+
+.section {
+  background: linear-gradient(180deg, rgba(40,40,65,0.7) 0%, rgba(25,25,40,0.7) 100%);
+  border: 1px solid #3a3a5c;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  transition: border-color 0.2s;
+}
+
+.section:hover {
+  border-color: #5a5a8a;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, rgba(50,50,80,0.5) 0%, transparent 100%);
+  border-bottom: 1px solid #2a2a45;
+  gap: 10px;
+  cursor: default;
+}
+
+.section-header .icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid #4a4a6a;
+  border-radius: 4px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.section-header .icon:hover {
+  border-color: #8a8aba;
+  background: rgba(80,80,120,0.3);
+}
+
+.emoji-picker {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  background: #2a2a45;
+  border: 1px solid #4a4a6a;
+  border-radius: 6px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  z-index: 10;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  min-width: 220px;
+}
+
+.emoji-picker button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background 0.15s;
+  text-align: center;
+}
+
+.emoji-picker button:hover {
+  background: rgba(100,100,180,0.3);
+}
+
+.section-header .title-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.section-header .section-title {
+  color: #ffaa00;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: background 0.15s;
+  display: inline-block;
+}
+
+.section-header .section-title:hover {
+  background: rgba(255,170,0,0.08);
+}
+
+.section-header .section-title-input {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid #ffaa00;
+  border-radius: 3px;
+  padding: 2px 8px;
+  color: #ffaa00;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  width: 100%;
+  max-width: 300px;
+}
+
+.section-header .section-subtitle {
+  color: #6a6a8a;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.section-header .section-count {
+  font-size: 12px;
+  color: #5a5a7a;
+  background: rgba(0,0,0,0.3);
+  padding: 2px 10px;
+  border-radius: 10px;
+  border: 1px solid #3a3a5c;
+  flex-shrink: 0;
+}
+
+.add-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #4a6a4a;
+  border-radius: 4px;
+  background: rgba(40,80,40,0.3);
+  color: #6bff6b;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.add-btn:hover {
+  background: rgba(60,120,60,0.4);
+  border-color: #6bff6b;
+  box-shadow: 0 0 10px rgba(107,255,107,0.15);
+}
+
+.section-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.section:hover .section-actions {
+  opacity: 1;
+}
+
+.section-del-btn, .section-move-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: all 0.15s;
+  color: #5a5a7a;
+  line-height: 1;
+}
+
+.section-move-btn:hover {
+  background: rgba(100,100,180,0.2);
+  color: #8a8aba;
+}
+
+.section-del-btn:hover {
+  background: rgba(180,60,60,0.2);
+  color: #ff6b6b;
+}
+
+.task-list {
+  list-style: none;
+  padding: 4px 0;
+}
+
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px 16px 10px 16px;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.task-item:last-child {
+  border-bottom: none;
+}
+
+.task-item:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.task-check {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #5a5a7a;
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  background: rgba(0,0,0,0.3);
+}
+
+.task-item.done .task-check {
+  border-color: #4a8a4a;
+  background: rgba(60,120,60,0.3);
+}
+
+.task-item.done .task-check::after {
+  content: '✔';
+  color: #6bff6b;
+  font-size: 11px;
+}
+
+.task-text {
+  flex: 1;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #d0d0e0;
+  transition: all 0.2s;
+  min-height: 22px;
+  word-break: break-word;
+}
+
+.task-item.done .task-text {
+  color: #5a5a7a;
+  text-decoration: line-through;
+}
+
+.task-text.edit-mode {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid #5a5a8a;
+  border-radius: 3px;
+  padding: 2px 6px;
+  outline: none;
+  color: #fff;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  width: 100%;
+  resize: vertical;
+}
+
+.task-text.edit-mode:focus {
+  border-color: #8a8aba;
+  box-shadow: 0 0 8px rgba(100,100,180,0.2);
+}
+
+.task-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.task-item:hover .task-actions {
+  opacity: 1;
+}
+
+.task-edit-btn, .task-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  transition: all 0.15s;
+  color: #5a5a7a;
+}
+
+.task-edit-btn:hover {
+  background: rgba(100,100,180,0.2);
+  color: #8a8aba;
+}
+
+.task-delete-btn:hover {
+  background: rgba(180,60,60,0.2);
+  color: #ff6b6b;
+}
+
+.new-task-form {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 10px;
+  border-top: 1px dashed #2a2a45;
+}
+
+.new-task-form.hidden {
+  display: none;
+}
+
+.new-task-input {
+  flex: 1;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid #3a3a5c;
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: #d0d0e0;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.new-task-input:focus {
+  border-color: #6a6a9a;
+  box-shadow: 0 0 8px rgba(100,100,180,0.15);
+}
+
+.new-task-input::placeholder {
+  color: #4a4a6a;
+}
+
+.save-btn {
+  background: linear-gradient(180deg, rgba(60,120,60,0.4) 0%, rgba(40,80,40,0.4) 100%);
+  border: 1px solid #4a7a4a;
+  border-radius: 4px;
+  padding: 8px 16px;
+  color: #8aff8a;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.save-btn:hover {
+  background: rgba(60,120,60,0.6);
+  border-color: #6bff6b;
+  box-shadow: 0 0 10px rgba(107,255,107,0.15);
+}
+
+.cancel-btn {
+  background: rgba(80,40,40,0.3);
+  border: 1px solid #6a4a4a;
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: #ff8a8a;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.cancel-btn:hover {
+  background: rgba(120,40,40,0.4);
+  border-color: #ff6b6b;
+}
+
+.empty-msg {
+  padding: 20px 16px;
+  text-align: center;
+  color: #4a4a6a;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.add-section-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  background: rgba(40,40,65,0.4);
+  border: 2px dashed #3a3a5c;
+  border-radius: 8px;
+  color: #5a5a8a;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  margin-top: 4px;
+}
+
+.add-section-btn:hover {
+  border-color: #5a5a8a;
+  color: #8a8aba;
+  background: rgba(50,50,80,0.4);
+}
+
+.new-section-form {
+  background: linear-gradient(180deg, rgba(40,40,65,0.7) 0%, rgba(25,25,40,0.7) 100%);
+  border: 1px solid #ffaa00;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 20px rgba(255,170,0,0.05);
+}
+
+.new-section-form.hidden {
+  display: none;
+}
+
+.new-section-form label {
+  display: block;
+  font-size: 12px;
+  color: #6a6a8a;
+  margin-bottom: 4px;
+  margin-top: 10px;
+}
+
+.new-section-form label:first-child {
+  margin-top: 0;
+}
+
+.new-section-form input, .new-section-form select {
+  width: 100%;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid #3a3a5c;
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: #d0d0e0;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.new-section-form input:focus, .new-section-form select:focus {
+  border-color: #6a6a9a;
+}
+
+.new-section-form .form-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.new-section-form .form-btns button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.status-bar {
+  text-align: center;
+  padding: 8px;
+  font-size: 12px;
+  color: #4a4a6a;
+  margin-bottom: 10px;
+  transition: color 0.3s;
+}
+
+.status-bar.synced { color: #4a7a4a; }
+.status-bar.saving { color: #ffaa00; }
+.status-bar.offline { color: #8a4a4a; }
+
+@media (max-width: 600px) {
+  body { padding: 10px; }
+  .header h1 { font-size: 14px; }
+  .section-header { flex-wrap: wrap; }
+  .task-actions, .section-actions { opacity: 1; }
+  .new-task-form { flex-wrap: wrap; }
+  .save-btn, .cancel-btn { flex: 1; text-align: center; }
+  .emoji-picker { grid-template-columns: repeat(6, 1fr); left: auto; right: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>⬡ DROPFALL ⬡</h1>
+    <div class="subtitle">Дорожная карта развития сервера</div>
+    <div class="counters">
+      <span class="done">✔ <span id="doneCount">0</span></span>
+      <span class="total">◈ <span id="totalCount">0</span></span>
+    </div>
+  </div>
+
+  <div class="status-bar" id="statusBar">⏳ Загрузка...</div>
+  <div id="app"></div>
+</div>
+
+<script>
+const EMOJIS = ['🏠','⚙️','💰','🎭','⚔️','🛡️','🎨','🌍','🔮','📦','🏰','🌲','🔥','💎','🗡️','🛠️','🧪','📜','⭐','👑','🐉','🧟','🏹','🧭','🚀','🎯','🧩','🎲','📊','🔧'];
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCUdNt-d56Sa0kYohp9OPAO41OtCXwQBJU",
+  authDomain: "tzdropfall.firebaseapp.com",
+  databaseURL: "https://tzdropfall-default-rtdb.firebaseio.com",
+  projectId: "tzdropfall",
+  storageBucket: "tzdropfall.firebasestorage.app",
+  messagingSenderId: "96951691270",
+  appId: "1:96951691270:web:4e0f26b87277c210f93b87",
+  measurementId: "G-ST3NXL9PC2"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const dataRef = db.ref('todo');
+
+const defaultData = [
+  { icon: '🏠', title: 'Спавн и мир', subtitle: 'Телепорты, дома, территории', tasks: [
+    'Решить: переносить спавн в отдельный мир или нет (для вайпов и RP города)',
+    'После телепорта — эффект скорости? или слепота/тошнота?',
+    'Механика возвращения на спавн',
+    'Покупка домов + /home с ценой, КД и ожиданием ТП'
+  ]},
+  { icon: '⚙️', title: 'Игровая механика', subtitle: 'Таланты, скилы, инвентарь', tasks: [
+    'Ветка талантов — проверить, починить баги',
+    'Скилы + посохи — разобраться, что к чему',
+    'Уменьшить базовый инвентарь? Разблокировка слотов недорого'
+  ]},
+  { icon: '💰', title: 'Экономика', subtitle: 'Заработок, магазины, лут', tasks: [
+    'Система оплаты за убийство мобов',
+    'Продажа лута — где, как, цены',
+    'Билеты на данжи — покупка, активация, 20 сек ожидания, ТП в другой мир'
+  ]},
+  { icon: '🎭', title: 'NPC и квесты', subtitle: 'Обучение, торговцы, задания', tasks: [
+    'Кастомные NPC: обучение игре',
+    'Квесты от NPC',
+    'Торговцы с кастомным ассортиментом'
+  ]},
+  { icon: '⚔️', title: 'Данжи и боссы', subtitle: 'Подземелья, боссы, лути', tasks: [
+    'Создание данжей (отдельный мир)',
+    'Боссы с кастомным лутом',
+    'Конфигурируемый лут — мобильный при вайпе',
+    'Билеты на данж: покупка → ожидание 20 сек → ТП'
+  ]},
+  { icon: '🛡️', title: 'Безопасность', subtitle: 'Антибот, спавн новичков', tasks: [
+    'Капча при входе (защита от ботов)',
+    'Проверить AuthMe — spawn новичков',
+    'Отключить установку спавнточки кроватью (NoBedRespawn)'
+  ]},
+  { icon: '🎨', title: 'Кастомизация', subtitle: 'Скины, модельки, внешность', tasks: [
+    'HD скины — нужны?',
+    'Кастомные модели игроков?',
+    'Возможно: система скинов/косметики'
+  ]}
+];
+
+let currentData = [];
+let pendingUpdate = false;
+let openEmojiSection = null;
+
+function setStatus(state, msg) {
+  const el = document.getElementById('statusBar');
+  el.className = 'status-bar ' + state;
+  el.textContent = msg;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function render() {
+  const data = currentData;
+  const app = document.getElementById('app');
+  let total = 0, done = 0;
+  let html = '';
+
+  data.forEach((section, si) => {
+    const tasks = section.tasks || [];
+    const sectDone = tasks.filter(t => typeof t === 'object' ? t.done : false).length;
+    const sectTotal = tasks.length;
+    total += sectTotal;
+    done += sectDone;
+
+    const icon = section.icon || '📋';
+    const title = escapeHtml(section.title);
+    const subtitle = escapeHtml(section.subtitle || '');
+
+    html += `<div class="section" data-section="${si}">`;
+    html += `<div class="section-header">`;
+    html += `<div class="icon" onclick="toggleEmojiPicker(${si})" title="Сменить иконку">${icon}</div>`;
+    html += `<div class="title-group">`;
+    html += `<div class="section-title" onclick="renameSection(${si})" id="stitle-${si}">${title}</div>`;
+    if (subtitle) html += `<div class="section-subtitle">${subtitle}</div>`;
+    html += `</div>`;
+    html += `<span class="section-count">${sectDone}/${sectTotal}</span>`;
+    html += `<div class="section-actions">`;
+    html += `<button class="section-move-btn" onclick="event.stopPropagation();moveSection(${si},-1)" title="Вверх">▲</button>`;
+    html += `<button class="section-move-btn" onclick="event.stopPropagation();moveSection(${si},1)" title="Вниз">▼</button>`;
+    html += `<button class="section-del-btn" onclick="event.stopPropagation();deleteSection(${si})" title="Удалить раздел">✕</button>`;
+    html += `</div>`;
+    html += `<button class="add-btn" onclick="addTask(${si})" title="Добавить задачу">+</button>`;
+    html += `</div>`;
+
+    html += `<ul class="task-list" id="tasklist-${si}">`;
+    tasks.forEach((task, ti) => {
+      const text = typeof task === 'string' ? task : task.text;
+      const doneTask = typeof task === 'object' && task.done;
+      html += `<li class="task-item${doneTask ? ' done' : ''}" data-si="${si}" data-ti="${ti}">`;
+      html += `<div class="task-check" onclick="toggleTask(${si},${ti})"></div>`;
+      html += `<div class="task-text" onclick="toggleTask(${si},${ti})">${escapeHtml(text)}</div>`;
+      html += `<div class="task-actions">`;
+      html += `<button class="task-edit-btn" onclick="event.stopPropagation();editTask(${si},${ti})" title="Редактировать">✎</button>`;
+      html += `<button class="task-delete-btn" onclick="event.stopPropagation();deleteTask(${si},${ti})" title="Удалить">✕</button>`;
+      html += `</div></li>`;
+    });
+    html += `</ul>`;
+
+    html += `<div class="new-task-form hidden" id="newform-${si}">`;
+    html += `<input class="new-task-input" id="newinput-${si}" placeholder="Новая задача..." maxlength="300">`;
+    html += `<button class="save-btn" onclick="saveNewTask(${si})">+ Добавить</button>`;
+    html += `<button class="cancel-btn" onclick="cancelNewTask(${si})">Отмена</button>`;
+    html += `</div>`;
+    html += `</div>`;
+  });
+
+  html += `<button class="add-section-btn" onclick="showNewSectionForm()">＋ Добавить раздел</button>`;
+
+  html += `<div class="new-section-form hidden" id="newSectionForm">`;
+  html += `<label>Название раздела</label>`;
+  html += `<input id="nsTitle" placeholder="Например: Магия" maxlength="60">`;
+  html += `<label>Иконка (выбери или введи свой эмодзи)</label>`;
+  html += `<select id="nsIcon" style="margin-bottom:4px">`;
+  EMOJIS.forEach(e => html += `<option value="${e}">${e}</option>`);
+  html += `</select>`;
+  html += `<input id="nsIconCustom" placeholder="Или введи свой эмодзи..." maxlength="4" style="margin-top:4px">`;
+  html += `<label>Подзаголовок (необязательно)</label>`;
+  html += `<input id="nsSubtitle" placeholder="Например: Заклинания, алхимия, артефакты" maxlength="80">`;
+  html += `<div class="form-btns">`;
+  html += `<button class="save-btn" onclick="saveNewSection()">Создать</button>`;
+  html += `<button class="cancel-btn" onclick="hideNewSectionForm()">Отмена</button>`;
+  html += `</div></div>`;
+
+  app.innerHTML = html;
+  document.getElementById('doneCount').textContent = done;
+  document.getElementById('totalCount').textContent = total;
+  setStatus('synced', '✔ Синхронизировано');
+}
+
+function pushToFirebase(data) {
+  pendingUpdate = true;
+  setStatus('saving', '💾 Сохранение...');
+  dataRef.set(data, (err) => {
+    pendingUpdate = false;
+    if (err) setStatus('offline', '✖ Ошибка сохранения');
+    else setStatus('synced', '✔ Синхронизировано');
+  });
+}
+
+function toggleTask(si, ti) {
+  const data = JSON.parse(JSON.stringify(currentData));
+  const task = data[si].tasks[ti];
+  if (typeof task === 'string') {
+    data[si].tasks[ti] = { text: task, done: true };
+  } else {
+    task.done = !task.done;
+  }
+  pushToFirebase(data);
+}
+
+function editTask(si, ti) {
+  const data = currentData;
+  const task = data[si].tasks[ti];
+  const text = typeof task === 'string' ? task : task.text;
+  const item = document.querySelector(`.task-item[data-si="${si}"][data-ti="${ti}"]`);
+  if (!item) return;
+  const textEl = item.querySelector('.task-text');
+  textEl.contentEditable = true;
+  textEl.classList.add('edit-mode');
+  textEl.focus();
+  const range = document.createRange();
+  range.selectNodeContents(textEl);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  const saveEdit = () => {
+    textEl.contentEditable = false;
+    textEl.classList.remove('edit-mode');
+    const newText = (textEl.textContent || '').trim();
+    if (newText && newText !== text) {
+      const newData = JSON.parse(JSON.stringify(currentData));
+      const t = newData[si].tasks[ti];
+      if (typeof t === 'string') newData[si].tasks[ti] = newText;
+      else t.text = newText;
+      pushToFirebase(newData);
+    } else {
+      render();
+    }
+  };
+  textEl.addEventListener('blur', saveEdit, { once: true });
+  textEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); textEl.blur(); }
+    if (e.key === 'Escape') { render(); }
+  });
+}
+
+function deleteTask(si, ti) {
+  const data = JSON.parse(JSON.stringify(currentData));
+  data[si].tasks.splice(ti, 1);
+  pushToFirebase(data);
+}
+
+function addTask(si) {
+  document.getElementById(`newform-${si}`).classList.remove('hidden');
+  document.getElementById(`newinput-${si}`).focus();
+}
+
+function cancelNewTask(si) {
+  document.getElementById(`newform-${si}`).classList.add('hidden');
+  document.getElementById(`newinput-${si}`).value = '';
+}
+
+function saveNewTask(si) {
+  const input = document.getElementById(`newinput-${si}`);
+  const text = input.value.trim();
+  if (!text) return;
+  const data = JSON.parse(JSON.stringify(currentData));
+  data[si].tasks.push(text);
+  pushToFirebase(data);
+  input.value = '';
+  document.getElementById(`newform-${si}`).classList.add('hidden');
+}
+
+function toggleEmojiPicker(si) {
+  if (openEmojiSection === si) { openEmojiSection = null; render(); return; }
+  openEmojiSection = si;
+  render();
+  if (openEmojiSection !== null) {
+    const iconEl = document.querySelector(`.section[data-section="${si}"] .icon`);
+    if (!iconEl) return;
+    const picker = document.createElement('div');
+    picker.className = 'emoji-picker';
+    picker.id = 'emojiPicker';
+    EMOJIS.forEach(e => {
+      const btn = document.createElement('button');
+      btn.textContent = e;
+      btn.onclick = (ev) => { ev.stopPropagation(); setEmoji(si, e); };
+      picker.appendChild(btn);
+    });
+    iconEl.appendChild(picker);
+    setTimeout(() => document.addEventListener('click', closeEmojiOutside, { once: true }), 0);
+  }
+}
+
+function closeEmojiOutside(e) {
+  if (!e.target.closest('.emoji-picker') && !e.target.closest('.icon')) {
+    openEmojiSection = null;
+    render();
+  } else {
+    setTimeout(() => document.addEventListener('click', closeEmojiOutside, { once: true }), 0);
+  }
+}
+
+function setEmoji(si, emoji) {
+  const data = JSON.parse(JSON.stringify(currentData));
+  data[si].icon = emoji;
+  pushToFirebase(data);
+}
+
+function renameSection(si) {
+  const data = currentData;
+  const current = data[si].title;
+  const el = document.getElementById(`stitle-${si}`);
+  if (!el) return;
+  const input = document.createElement('input');
+  input.className = 'section-title-input';
+  input.value = current;
+  input.maxLength = 60;
+  el.replaceWith(input);
+  input.focus();
+  input.select();
+  const save = () => {
+    const val = input.value.trim();
+    if (val) {
+      const newData = JSON.parse(JSON.stringify(currentData));
+      newData[si].title = val;
+      pushToFirebase(newData);
+    } else {
+      render();
+    }
+  };
+  input.addEventListener('blur', save, { once: true });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { render(); }
+  });
+}
+
+function deleteSection(si) {
+  const data = JSON.parse(JSON.stringify(currentData));
+  if (data.length <= 1) return;
+  data.splice(si, 1);
+  pushToFirebase(data);
+}
+
+function moveSection(si, dir) {
+  const data = JSON.parse(JSON.stringify(currentData));
+  const ni = si + dir;
+  if (ni < 0 || ni >= data.length) return;
+  [data[si], data[ni]] = [data[ni], data[si]];
+  pushToFirebase(data);
+}
+
+function showNewSectionForm() {
+  document.getElementById('newSectionForm').classList.remove('hidden');
+  document.getElementById('nsTitle').focus();
+}
+
+function hideNewSectionForm() {
+  document.getElementById('newSectionForm').classList.add('hidden');
+}
+
+function saveNewSection() {
+  const title = document.getElementById('nsTitle').value.trim();
+  if (!title) return;
+  const iconCustom = document.getElementById('nsIconCustom').value.trim();
+  const icon = iconCustom || document.getElementById('nsIcon').value;
+  const subtitle = document.getElementById('nsSubtitle').value.trim();
+  const data = JSON.parse(JSON.stringify(currentData));
+  data.push({ icon, title, subtitle: subtitle || 'Новый раздел', tasks: [] });
+  pushToFirebase(data);
+  hideNewSectionForm();
+  document.getElementById('nsTitle').value = '';
+  document.getElementById('nsIconCustom').value = '';
+  document.getElementById('nsSubtitle').value = '';
+}
+
+dataRef.on('value', (snapshot) => {
+  const val = snapshot.val();
+  if (val && Array.isArray(val)) {
+    currentData = val;
+  } else if (val === null) {
+    currentData = JSON.parse(JSON.stringify(defaultData));
+    dataRef.set(currentData);
+  } else {
+    currentData = JSON.parse(JSON.stringify(defaultData));
+    dataRef.set(currentData);
+  }
+  render();
+}, (err) => {
+  setStatus('offline', '✖ Ошибка подключения к Firebase');
+  currentData = JSON.parse(JSON.stringify(defaultData));
+  render();
+});
+</script>
+
+</body>
+</html>
