@@ -320,11 +320,32 @@ function restoreHistory(key){
   var e=null;for(var i=0;i<historyLog.length;i++){if(historyLog[i]._key===key){e=historyLog[i];break}}
   if(!e)return;restoring=true;
   var d=JSON.parse(JSON.stringify(e.data));d=norm(d);
-  dataRef.set(d,function(err){restoring=false;if(!err){histRef.push({data:JSON.parse(JSON.stringify(d)),description:'⏪ Откат к: '+e.description,timestamp:Date.now()});closeHistory()}})
+  dataRef.set(d,function(err){
+    restoring=false;
+    if(!err){
+      data=norm(JSON.parse(JSON.stringify(d)));
+      R();
+      histRef.push({data:JSON.parse(JSON.stringify(d)),description:'⏪ Откат к: '+(e.description||''),timestamp:Date.now()},function(){
+        closeHistory();
+      });
+    }
+  })
 }
 
-function deleteHistoryEntry(key){if(!confirm('🗑 Удалить эту запись из истории?'))return;histRef.child(key).remove()}
-function clearAllHistory(){if(!confirm('🗑 Очистить всю историю?\n\nЭто действие нельзя отменить.'))return;histRef.remove()}
+function deleteHistoryEntry(key){
+  if(!confirm('🗑 Удалить эту запись из истории?'))return;
+  histRef.child(key).remove(function(){
+    historyLog=historyLog.filter(function(e){return e._key!==key});
+    renderHistory();
+  });
+}
+function clearAllHistory(){
+  if(!confirm('🗑 Очистить всю историю?\n\nЭто действие нельзя отменить.'))return;
+  histRef.remove(function(){
+    historyLog=[];
+    renderHistory();
+  });
+}
 
 dataRef.on('value',function(sn){
   var v=sn.val();
