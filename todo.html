@@ -34,7 +34,7 @@ body{background:#1a1a2e;background-image:radial-gradient(ellipse at 20% 50%,#162
 .block-lapis{width:56px;height:56px;top:850px;right:50px;background:#1a3a8a;background-image:radial-gradient(circle at 30% 40%,#2a4aaa 4px,transparent 4px),radial-gradient(circle at 70% 60%,#0a2a6a 3px,transparent 3px);transform:rotate(22deg)}
 .block-purpur{width:64px;height:64px;top:1100px;right:15px;background:#6a3a8a;background-image:linear-gradient(45deg,rgba(255,255,255,.06) 25%,transparent 25%),linear-gradient(-45deg,rgba(255,255,255,.06) 25%,transparent 25%);background-size:16px 16px;transform:rotate(-6deg)}
 .block-sponge{width:70px;height:70px;top:1200px;left:12px;background:#c8b820;background-image:radial-gradient(circle at 20% 20%,rgba(0,0,0,.15) 5px,transparent 5px),radial-gradient(circle at 60% 20%,rgba(0,0,0,.15) 5px,transparent 5px),radial-gradient(circle at 40% 50%,rgba(0,0,0,.15) 5px,transparent 5px),radial-gradient(circle at 80% 60%,rgba(0,0,0,.15) 5px,transparent 5px),radial-gradient(circle at 20% 80%,rgba(0,0,0,.15) 5px,transparent 5px),radial-gradient(circle at 70% 85%,rgba(0,0,0,.15) 5px,transparent 5px);transform:rotate(10deg)}
-.steve-bg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:0;pointer-events:none;opacity:.13;width:520px;height:650px}
+.steve-bg{position:fixed;right:-40px;bottom:-20px;z-index:0;pointer-events:none;opacity:.07;width:220px;height:275px}
 body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,.015) 2px,rgba(255,255,255,.015) 4px);pointer-events:none;z-index:0}
 .container{max-width:900px;margin:0 auto;position:relative;z-index:1}
 .header{text-align:center;margin-bottom:30px;padding:30px 20px;background:linear-gradient(180deg,rgba(50,50,80,.6) 0%,rgba(30,30,50,.4) 100%);border:2px solid #3a3a5c;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.5),inset 0 0 40px rgba(100,100,180,.05);position:relative}
@@ -525,10 +525,16 @@ function clearAllHistory(){
 
 dataRef.on('value',function(sn){
   var v=sn.val();
-  if(v&&Array.isArray(v))data=norm(v);
-  else if(v===null){data=JSON.parse(JSON.stringify(D0));dataRef.set(data)}
-  else{data=JSON.parse(JSON.stringify(D0));dataRef.set(data)}
-  R()
+  if(v===null||v===undefined){data=JSON.parse(JSON.stringify(D0));dataRef.set(data);R();return}
+  // Firebase может вернуть объект {0:...,1:...} вместо массива — конвертируем
+  if(!Array.isArray(v)){
+    var arr=[];
+    var keys=Object.keys(v).map(Number).sort(function(a,b){return a-b});
+    for(var i=0;i<keys.length;i++)arr.push(v[keys[i]]);
+    v=arr;
+  }
+  data=norm(v);
+  R();
 },function(){st('offline','✖ Ошибка подключения к Firebase');data=JSON.parse(JSON.stringify(D0));R()});
 
 histRef.on('value',function(sn){
